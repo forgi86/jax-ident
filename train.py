@@ -1,16 +1,16 @@
-import nonlinear_benchmarks
-from sklearn.preprocessing import StandardScaler
 from argparse import Namespace
-from jaxid.datasets import SubsequenceDataset, NumpyLoader
-from jaxid.models import StateUpdateAndOptput, MLP
+from pathlib import Path
+from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm
 import jax
 from jax import random, numpy as jnp
-from jax.lax import scan
 import optax
-from tqdm import tqdm
 from flax.training import orbax_utils
 import orbax
-from pathlib import Path
+from jaxid.datasets import SubsequenceDataset, NumpyLoader
+from jaxid.models import StateUpdateAndOptput, MLP
+import nonlinear_benchmarks
+
 
 
 # Configuration
@@ -30,6 +30,7 @@ cfg = {
 }
 cfg = Namespace(**cfg)
 
+# Random key
 key = random.key(42)
 
 # Load data
@@ -53,8 +54,8 @@ train_loader = NumpyLoader(train_data, batch_size=cfg.batch_size, shuffle=True, 
 
 
 # Make model
-f_xu = MLP([64, 32, cfg.nx])
-g_x = MLP([64, 32, cfg.ny])
+f_xu = MLP([32, 16, cfg.nx])
+g_x = MLP([32, 16, cfg.ny])
 fg = StateUpdateAndOptput(f_xu, g_x)
 
 # Initialize model parameters
@@ -63,11 +64,10 @@ u = jnp.ones((cfg.nu,))
 key, subkey = random.split(key)
 params = fg.init(subkey, x, u)
 
-
 # Define loss
 def simulate(params, x0, u_seq):
     fg_func = lambda x, u: fg.apply(params, x, u)
-    return scan(fg_func, x0, u_seq)
+    return jax.lax.scan(fg_func, x0, u_seq)
 
 def loss_fn(params, batch_x0, batch_u, batch_y):
     def sequence_mse(x0, u_seq, y_seq):

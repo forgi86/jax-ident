@@ -1,16 +1,15 @@
-import nonlinear_benchmarks
-from sklearn.preprocessing import StandardScaler
 from argparse import Namespace
-from jaxid.datasets import SubsequenceDataset, NumpyLoader
-from jaxid.models import StateUpdateAndOptput, MLP
+from pathlib import Path
+from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm
 import jax
 from jax import random, numpy as jnp
-from jax.lax import scan
 import optax
-from tqdm import tqdm
 from flax.training import orbax_utils
 import orbax
-from pathlib import Path
+from jaxid.datasets import SubsequenceDataset, NumpyLoader
+from jaxid.models import StateUpdateAndOptput, MLP
+import nonlinear_benchmarks
 
 
 # Configuration
@@ -66,7 +65,7 @@ params = fg.init(subkey, x, u)
 # Define loss
 def simulate(params, x0, u_seq):
     fg_func = lambda x, u: fg.apply(params, x, u)
-    return scan(fg_func, x0, u_seq)
+    return jax.lax.scan(fg_func, x0, u_seq)
 
 # Dummy sequence simulation
 key, subkey = random.split(key)

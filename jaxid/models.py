@@ -16,7 +16,7 @@ class MLP(nn.Module):
         for i, lyr in enumerate(self.layers):
             x = lyr(x)
             if i != len(self.layers) - 1:
-                x = nn.relu(x)
+                x = nn.tanh(x)
         return x
 
 class StateUpdateAndOptput(nn.Module):
