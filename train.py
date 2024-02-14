@@ -2,12 +2,13 @@ from argparse import Namespace
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
+import numpy as np
 import jax
 from jax import random, numpy as jnp
 import optax
 from flax.training import orbax_utils
 import orbax
-from jaxid.datasets import SubsequenceDataset, NumpyLoader
+from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
 from jaxid.models import StateUpdateAndOptput, MLP
 import nonlinear_benchmarks
 
@@ -42,14 +43,14 @@ y_train = y_train.reshape(-1, cfg.ny)
 
 # Rescale data
 scaler_u = StandardScaler()
-u = scaler_u.fit_transform(u_train)
+u = scaler_u.fit_transform(u_train).astype(np.float32)
 
 scaler_y = StandardScaler()
-y = scaler_y.fit_transform(y_train)
+y = scaler_y.fit_transform(y_train).astype(np.float32)
 
 # Make Dataset and Dataloaders
 train_data = SubsequenceDataset(u, y, subseq_len=cfg.seq_len)
-train_loader = NumpyLoader(
+train_loader = DataLoader(
     train_data, batch_size=cfg.batch_size, shuffle=True, drop_last=True
 )
 
