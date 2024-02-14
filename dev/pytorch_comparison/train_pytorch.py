@@ -29,9 +29,15 @@ cfg = {
 }
 cfg = Namespace(**cfg)
 
+no_cuda = False
+
+use_cuda = not no_cuda and torch.cuda.is_available()
+device = "cuda:0" if use_cuda else "cpu"
+torch.set_default_device(device)
+
 # Pytorch-specific possible optimizations (activate no more than one!)
-compile = False
-trace = True
+compile = True
+trace = False
 script = False
 
 # Load data
@@ -49,9 +55,10 @@ scaler_y = StandardScaler()
 y = scaler_y.fit_transform(y_train).astype(np.float32)
 
 # Make Dataset and Dataloaders
-train_data = SubsequenceDataset(u, y, subseq_len=cfg.seq_len)
+train_data = SubsequenceDataset(torch.tensor(u), torch.tensor(y), subseq_len=cfg.seq_len)
 train_loader = DataLoader(
-    train_data, batch_size=cfg.batch_size, shuffle=True, drop_last=True
+    train_data, batch_size=cfg.batch_size, shuffle=True, drop_last=True,
+    generator=torch.Generator(device=device)
 )
 
 # Make model
