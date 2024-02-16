@@ -8,7 +8,7 @@ from jax import random, numpy as jnp
 import optax
 import torch
 from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
-from jaxid.models import MLP, Simulator, BatchedSimulator
+from jaxid.models import MLP, BatchedSimulator
 import nonlinear_benchmarks
 
 
