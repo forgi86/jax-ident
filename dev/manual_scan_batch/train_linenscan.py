@@ -57,17 +57,20 @@ train_loader = DataLoader(
 # Make model
 f_xu = MLP(cfg.hidden_f + [cfg.nx])
 g_x = MLP(cfg.hidden_g + [cfg.ny])
-model = BatchedSimulator(f_xu, g_x)
+model = Simulator(f_xu, g_x)
 
-x0 = jnp.ones((cfg.batch_size, cfg.nx,))
-u = jnp.ones((cfg.batch_size, cfg.seq_len, cfg.nu))
+x0 = jnp.ones((cfg.nx,))
+u = jnp.ones((cfg.seq_len, cfg.nu))
 y, params = model.init_with_output(jax.random.key(0), x0, u)
 
+
 def loss_fn(params, batch_x0, batch_u, batch_y):
-        batch_y_hat = model.apply(params, batch_x0, batch_u)
-        err = batch_y[:, cfg.skip :] - batch_y_hat[:, cfg.skip :]
+    def sequence_mse(x0, u_seq, y_seq):
+        y_hat = model.apply(params, x0, u_seq)
+        err = y_seq[cfg.skip :] - y_hat[cfg.skip :]
         loss = jnp.mean(err**2)
         return loss
+    return jnp.mean(jax.vmap(sequence_mse)(batch_x0, batch_u, batch_y), axis=0)
 
 
 # Setup optimizer
@@ -91,10 +94,10 @@ for epoch in range(cfg.epochs):
 # Save a checkpoint (using torch utilities)
 ckpt = {
     "params": params,
-    "cfg": cfg,
+    "cfg": vars(cfg),
     "LOSS": jnp.array(LOSS),
     "scaler_u": scaler_u,
     "scaler_y": scaler_y,
 } 
 
-torch.save(ckpt, "ckpt.pt")
+torch.save(ckpt, "ckpt_autoscan.pt")
