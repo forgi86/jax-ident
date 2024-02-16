@@ -1,4 +1,4 @@
-# System Identification in Jax
+# System Identification with Jax
 
 An experimental code base for system identification with Jax. 
 
