@@ -36,7 +36,7 @@ device = "cuda:0" if use_cuda else "cpu"
 torch.set_default_device(device)
 
 # Pytorch-specific possible optimizations (activate no more than one!)
-compile = True
+compile = False
 trace = False
 script = False
 
