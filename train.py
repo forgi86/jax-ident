@@ -59,15 +59,21 @@ f_xu = MLP(cfg.hidden_f + [cfg.nx])
 g_x = MLP(cfg.hidden_g + [cfg.ny])
 model = BatchedSimulator(f_xu, g_x)
 
-x0 = jnp.ones((cfg.batch_size, cfg.nx,))
+x0 = jnp.ones(
+    (
+        cfg.batch_size,
+        cfg.nx,
+    )
+)
 u = jnp.ones((cfg.batch_size, cfg.seq_len, cfg.nu))
 y, params = model.init_with_output(jax.random.key(0), x0, u)
 
+
 def loss_fn(params, batch_x0, batch_u, batch_y):
-        batch_y_hat = model.apply(params, batch_x0, batch_u)
-        err = batch_y[:, cfg.skip :] - batch_y_hat[:, cfg.skip :]
-        loss = jnp.mean(err**2)
-        return loss
+    batch_y_hat = model.apply(params, batch_x0, batch_u)
+    err = batch_y[:, cfg.skip :] - batch_y_hat[:, cfg.skip :]
+    loss = jnp.mean(err**2)
+    return loss
 
 
 # Setup optimizer
@@ -95,6 +101,6 @@ ckpt = {
     "LOSS": jnp.array(LOSS),
     "scaler_u": scaler_u,
     "scaler_y": scaler_y,
-} 
+}
 
 torch.save(ckpt, "ckpt.pt")
