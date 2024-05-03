@@ -36,7 +36,7 @@ device = "cuda:0" if use_cuda else "cpu"
 torch.set_default_device(device)
 
 # Pytorch-specific possible optimizations (activate no more than one!)
-compile = False
+compile = True
 trace = False
 script = False
 
@@ -81,7 +81,8 @@ if trace:
 if compile:
     import time
     time_start = time.time()
-    model = torch.compile(model)
+    #model = torch.compile(model)
+    model = torch.compile(model, mode="reduce-overhead", fullgraph=False)
     model(*dummy_input)
     time_compile = time.time() - time_start
     print(f"Compile time: {time_compile:.2f}")

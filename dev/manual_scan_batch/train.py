@@ -9,7 +9,7 @@ import optax
 from flax.training import orbax_utils
 import orbax
 from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
-from jaxid.models import StateUpdateAndOptput, MLP
+from jaxid.statespace import StateUpdateAndOptput, MLP
 import nonlinear_benchmarks
 
 
