@@ -61,21 +61,14 @@ g_x = MLP(cfg.hidden_g + [cfg.ny])
 estimator = MLP(cfg.hidden_est + [cfg.nx])
 batched_subnet = BatchedSubNet(f_xu, g_x, estimator)
 
-
-x0 = jnp.ones(
-    (
-        cfg.batch_size,
-        cfg.nx,
-    )
-)
-
-u = jnp.ones((cfg.batch_size, cfg.seq_len_fit, cfg.nu))
+# Initialize model
 y_est = jnp.ones((cfg.batch_size, cfg.seq_len_est, cfg.ny))
 u_est = jnp.ones((cfg.batch_size, cfg.seq_len_est, cfg.nu))
 u_fit = jnp.ones((cfg.batch_size, cfg.seq_len_fit, cfg.nu))
 _, params = batched_subnet.init_with_output(key, y_est, u_est, u_fit)
 
 
+# Define loss function
 def loss_fn(params, batch_u, batch_y):
     batch_y_est = batch_y[:, : cfg.seq_len_est, :]
     batch_u_est = batch_u[:, : cfg.seq_len_est, :]
