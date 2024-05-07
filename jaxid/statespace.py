@@ -41,3 +41,27 @@ BatchedSimulator = nn.vmap(
     variable_axes={"params": None},
     split_rngs={"params": False},
 )
+
+
+class SubNet(nn.Module):
+    f_xu: nn.Module
+    g_x: nn.Module
+    estimator: MLP
+
+    def setup(self) -> None:
+        self.simulator = Simulator(self.f_xu, self.g_x)
+
+    def __call__(self, y_est, u_est, u_fit):
+        est = jnp.concatenate((y_est.ravel(), u_est.ravel()))
+        x0 = self.estimator(est)
+        y_fit = self.simulator(x0, u_fit)
+        return y_fit
+    
+BatchedSubNet = nn.vmap(
+    SubNet,
+    in_axes=0,
+    out_axes=0,
+    variable_axes={"params": None},
+    split_rngs={"params": False},
+)
+
