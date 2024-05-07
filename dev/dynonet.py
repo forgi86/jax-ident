@@ -5,7 +5,7 @@ from flax import linen as nn
 from typing import Callable
 from .static import MLP
 
-# simulate one step with a function (for later use with scan)
+# simulate one time step (for later use with scan)
 def filter_step(params, carry, u_step):
 
     b_coeff, a_coeff = params
@@ -19,15 +19,15 @@ def filter_step(params, carry, u_step):
     return carry, y_new
 
 
-filter_step_simo = jax.vmap(filter_step, in_axes=(0, 0, 0)) # (T, I) -> (T, I), each input channel processed by a different filter
-filter_step_mimo = jax.vmap(filter_step_simo, in_axes=(0, 0, None)) # (T, I) -> (T, O, I), outputs of all individual filters
+filter_step_simo = jax.vmap(filter_step, in_axes=(0, 0, 0)) # (T, I) -> (T, I), each channel processed by a different filter
+filter_step_mimo = jax.vmap(filter_step_simo, in_axes=(0, 0, None)) # (T, I) -> (T, O, I)
 
 def mimo_filter(params, carry, u): # u: (T, I)
     _, y_all = jax.lax.scan(lambda carry, u: filter_step_mimo(params, carry, u), carry, u) # y_all: (O, I, T)
     y = y_all.mean(axis=-1) # (T, O)
     return  y
 
-batched_mimo_filter = jax.vmap(mimo_filter, in_axes=(None, 0, 0))
+batched_mimo_filter = jax.vmap(mimo_filter, in_axes=(None, 0, 0)) # currentle unused
 
 
 def fixed_std_initializer(std):
@@ -88,11 +88,11 @@ class MimoLTI(nn.Module):
         )  # shape info.
         params = (b_coeff, a_coeff)
 
-        # TODO: initial carry as an optional input argument
-        u_carry = jnp.zeros((self.out_channels, self.in_channels, self.nb - 1))
-        y_carry = jnp.zeros((self.out_channels, self.in_channels, self.na))
+        u_carry = jnp.zeros((inputs.shape[0], self.out_channels, self.in_channels, self.nb - 1))
+        y_carry = jnp.zeros((inputs.shape[0], self.out_channels, self.in_channels, self.na))
         carry = (u_carry, y_carry)
-        y = mimo_filter(params, carry, inputs)
+        y = batched_mimo_filter(params, carry, inputs)
+        #y = inputs + 1
         return y
 
 
@@ -113,12 +113,3 @@ class DynoNet(nn.Module):
             ]
         )(u)
         return y + MimoLTI(self.in_channels, self.out_channels, self.nb, self.na)(u)
-    
-
-BatchedDynoNet = nn.vmap(
-    DynoNet,
-    in_axes=0,
-    out_axes=0,
-    variable_axes={"params": None},
-    split_rngs={"params": False},
-)

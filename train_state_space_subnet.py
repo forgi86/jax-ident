@@ -19,7 +19,7 @@ cfg = {
     "seq_len_fit": 1000,
     "seq_len_est": 30,
     "lr": 2e-4,
-    "epochs": 1,
+    "epochs": 2,
     # Model
     "nx": 10,
     "ny": 1,

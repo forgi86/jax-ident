@@ -9,7 +9,7 @@ import optax
 import torch
 import nonlinear_benchmarks
 from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
-from jaxid.dynonet import DynoNet
+from jaxid.dynonet import BatchedDynoNet
 
 
 # Configuration
@@ -56,20 +56,18 @@ train_loader = DataLoader(
     train_data, batch_size=cfg.batch_size, shuffle=True, drop_last=True
 )
 
-
-# Make model
-model = DynoNet(nb=cfg.nb, na=cfg.na, hidden_size=cfg.hidden_size)
+# Make model and initialize parameters
+model = BatchedDynoNet(nb=cfg.nb, na=cfg.na, hidden_size=cfg.hidden_size)
 _, params = model.init_with_output(
     jax.random.key(0), jnp.ones((cfg.batch_size, cfg.seq_len, nu))
 )
 
-
+# Define loss function
 def loss_fn(params, batch_u, batch_y):
     batch_y_hat = model.apply(params, batch_u)
     err = batch_y[:, cfg.skip :] - batch_y_hat[:, cfg.skip :]
     loss = jnp.mean(err**2)
     return loss
-
 
 # Setup optimizer
 optimizer = optax.adam(learning_rate=cfg.lr)
