@@ -8,7 +8,7 @@ import optax
 import torch
 from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
 from jaxid.static import MLP
-from jaxid.statespace import BatchedSimulator, SubNet, BatchedSubNet
+from jaxid.statespace import BatchedSubNet
 import nonlinear_benchmarks
 
 
@@ -58,7 +58,6 @@ train_loader = DataLoader(
 # Make model
 f_xu = MLP(cfg.hidden_f + [cfg.nx])
 g_x = MLP(cfg.hidden_g + [cfg.ny])
-model = BatchedSimulator(f_xu, g_x)
 estimator = MLP(cfg.hidden_est + [cfg.nx])
 batched_subnet = BatchedSubNet(f_xu, g_x, estimator)
 
@@ -115,4 +114,4 @@ ckpt = {
     "scaler_y": scaler_y,
 }
 
-torch.save(ckpt, "ss.pt")
+torch.save(ckpt, "ss_subnet.pt")
