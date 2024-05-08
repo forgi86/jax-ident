@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 from flax import linen as nn
 from typing import Callable
-from .static import MLP
+from .common import MLP
 
 # simulate one step with a function (for later use with scan)
 def filter_step(params, carry, u_step):

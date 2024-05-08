@@ -7,8 +7,8 @@ from jax import random, numpy as jnp
 import optax
 import torch
 from jaxid.datasets import SubsequenceDataset, NumpyLoader as DataLoader
-from jaxid.static import MLP
-from jaxid.statespace import BatchedSimulator
+from jaxid.common import MLP
+from jaxid.statespace import StateUpdateMLP, BatchedSimulator
 import nonlinear_benchmarks
 
 
@@ -18,14 +18,14 @@ cfg = {
     "batch_size": 32,
     "seq_len": 1000,
     "skip": 100,
-    "lr": 2e-4,
-    "epochs": 1,
+    "lr": 1e-3,
+    "epochs": 2,
     # Model
     "nx": 10,
     "ny": 1,
     "nu": 1,
-    "hidden_f": [32, 16],
-    "hidden_g": [32, 16],
+    "hidden_f": [16,],
+    "hidden_g": [16,],
 }
 cfg = Namespace(**cfg)
 
@@ -55,7 +55,7 @@ train_loader = DataLoader(
 
 
 # Make model
-f_xu = MLP(cfg.hidden_f + [cfg.nx])
+f_xu = StateUpdateMLP(cfg.hidden_f + [cfg.nx])
 g_x = MLP(cfg.hidden_g + [cfg.ny])
 model = BatchedSimulator(f_xu, g_x)
 
