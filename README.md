@@ -10,3 +10,4 @@ A code base for system identification with Jax.
 * Much faster than PyTorch implemetation, see experiments in [dev/pytorch_comparison](dev/pytorch_comparison). Reason: PyTorch currently lacks a native ``scan`` operation and/or an effective way to compile custom RNNs.
 * Simple interface based on flax transformations. Lower-level implementations in [dev/manual_scan_batch](dev/manual_scan_batch).
 * New: experimental implementation of [dynoNet](https://arxiv.org/pdf/2006.02250) with direct back-propagation through the recurrence steps (no specialized formulas/derivation)
+* New: experimental implementation of [LRU](https://proceedings.mlr.press/v202/orvieto23a.html). Implementation borrows heavily from https://github.com/NicolasZucchet/minimal-LRU
