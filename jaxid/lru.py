@@ -111,7 +111,7 @@ class LRU(nn.Module):
         )
         self.D = self.param("D", matrix_init, (self.d_model,))
 
-    def __call__(self, inputs):
+    def __call__(self, inputs, state=None):
         """Forward pass of a LRU: h_t+1 = lambda * h_t + B x_t+1, y_t = Re[C h_t + D x_t]"""
         diag_lambda = jnp.exp(-jnp.exp(self.nu_log) + 1j * jnp.exp(self.theta_log))
         B_norm = (self.B_re + 1j * self.B_im) * jnp.expand_dims(
@@ -121,6 +121,8 @@ class LRU(nn.Module):
 
         Lambda_elements = jnp.repeat(diag_lambda[None, ...], inputs.shape[0], axis=0)
         Bu_elements = jax.vmap(lambda u: B_norm @ u)(inputs)
+        if state is not None:
+            Bu_elements = Bu_elements.at[0].set(Bu_elements[0] + diag_lambda * state)
         # Compute hidden states
         _, hidden_states = parallel_scan(
             binary_operator_diag, (Lambda_elements, Bu_elements)
@@ -161,9 +163,9 @@ class SequenceLayer(nn.Module):
             self.dropout, broadcast_dims=[0], deterministic=not self.training
         )
 
-    def __call__(self, inputs):
+    def __call__(self, inputs, state=None):
         x = self.normalization(inputs)  # pre normalization
-        x = self.seq(x)  # call LRU
+        x = self.seq(x, state)  # call LRU
         x = self.drop(nn.gelu(x))  # gelu here?
         x = self.out1(x) * jax.nn.sigmoid(self.out2(x))  # GLU
         x = self.drop(x)
@@ -209,10 +211,11 @@ class DLRU(nn.Module):
         ]
         self.decoder = nn.Dense(self.out_channels)
 
-    def __call__(self, u):
+    def __call__(self, u, state=None):
         x = self.encoder(u)  # embed input in latent space
-        for layer in self.layers:
-            x = layer(x)  # apply each layer
+        for layer_idx, layer in enumerate(self.layers):
+            state_layer = state[layer_idx] if state is not None else None
+            x = layer(x, state=state_layer)  # apply each layer
         y = self.decoder(x)  # decode to output space
         return y
 
