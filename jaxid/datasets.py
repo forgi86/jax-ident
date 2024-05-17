@@ -21,7 +21,7 @@ class SubsequenceDataset(Dataset):
         self.stride = stride
 
     def __len__(self):
-        return int((self.length - self.subseq_len)//self.stride)
+        return int((self.length - self.subseq_len + 1)//self.stride)
 
     def __getitem__(self, idx):
         subsequences = [tensor[self.stride*idx:self.stride*idx+self.subseq_len] for tensor in self.tensors]
