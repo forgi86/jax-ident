@@ -21,8 +21,8 @@ cfg = {
     "lr": 2e-4,
     "epochs": 2,
     # Model
-    "n_layers": 3,
-    "d_model": 5,
+    "n_layers": 6,
+    "d_model": 20,
     "d_state": 10,
 }
 cfg = Namespace(**cfg)
