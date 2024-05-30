@@ -1,0 +1,7 @@
+jax
+tqdm
+torch
+optax
+scikit-learn
+scipy
+nonlinear_benchmarks
