@@ -19,7 +19,7 @@ cfg = {
     "seq_len": 1000,
     "skip": 100,
     "lr": 1e-3,
-    "epochs": 2,
+    "epochs": 10,
     # Model
     "nx": 10,
     "ny": 1,
