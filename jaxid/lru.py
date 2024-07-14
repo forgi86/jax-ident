@@ -135,6 +135,80 @@ class LRU(nn.Module):
         return outputs
 
 
+# class LRU(nn.Module):
+#     """
+#     LRU module in charge of the recurrent processing.
+#     Implementation following the one of Orvieto et al. 2023.
+#     """
+
+#     d_in: int  # input dimension
+#     d_out: int  # output dimension
+#     d_model: int  # input and output dimensions
+#     d_state: int  # hidden state dimension
+#     r_min: float = 0.0  # smallest lambda norm
+#     r_max: float = 1.0  # largest lambda norm
+#     max_phase: float = 6.28  # max phase lambda
+
+#     def setup(self):
+#         self.theta_log = self.param(
+#             "theta_log", partial(theta_init, max_phase=self.max_phase), (self.d_state,)
+#         )
+#         self.nu_log = self.param(
+#             "nu_log",
+#             partial(nu_init, r_min=self.r_min, r_max=self.r_max),
+#             (self.d_state,),
+#         )
+#         self.gamma_log = self.param(
+#             "gamma_log", gamma_log_init, (self.nu_log, self.theta_log)
+#         )
+
+#         # Glorot initialized Input/Output projection matrices
+#         self.B_re = self.param(
+#             "B_re",
+#             partial(matrix_init, normalization=jnp.sqrt(2 * self.d_in)),
+#             (self.d_state, self.d_in),
+#         )
+#         self.B_im = self.param(
+#             "B_im",
+#             partial(matrix_init, normalization=jnp.sqrt(2 * self.d_in)),
+#             (self.d_state, self.d_in),
+#         )
+#         self.C_re = self.param(
+#             "C_re",
+#             partial(matrix_init, normalization=jnp.sqrt(self.d_state)),
+#             (self.d_out, self.d_state),
+#         )
+#         self.C_im = self.param(
+#             "C_im",
+#             partial(matrix_init, normalization=jnp.sqrt(self.d_state)),
+#             (self.d_out, self.d_state),
+#         )
+#         self.D = self.param("D", matrix_init, (self.d_model,))
+
+#     def __call__(self, inputs, state=None):
+#         """Forward pass of a LRU: h_t+1 = lambda * h_t + B x_t+1, y_t = Re[C h_t + D x_t]"""
+#         diag_lambda = jnp.exp(-jnp.exp(self.nu_log) + 1j * jnp.exp(self.theta_log))
+#         B_norm = (self.B_re + 1j * self.B_im) * jnp.expand_dims(
+#             jnp.exp(self.gamma_log), axis=-1
+#         )
+#         C = self.C_re + 1j * self.C_im
+
+#         Lambda_elements = jnp.repeat(diag_lambda[None, ...], inputs.shape[0], axis=0)
+#         Bu_elements = jax.vmap(lambda u: B_norm @ u)(inputs)
+#         if state is not None:
+#             Bu_elements = Bu_elements.at[0].set(Bu_elements[0] + diag_lambda * state)
+#         # Compute hidden states
+#         _, hidden_states = parallel_scan(
+#             binary_operator_diag, (Lambda_elements, Bu_elements)
+#         )
+#         # Use them to compute the output of the module
+#         outputs = jax.vmap(lambda h, u: (C @ h).real + self.D * u)(
+#             hidden_states, inputs
+#         )
+
+#         return outputs
+    
+
 class SequenceLayer(nn.Module):
     """Single layer, with one LRU module, GLU, dropout and batch/layer norm"""
 
@@ -229,3 +303,4 @@ BatchedDLRU = nn.vmap(
     split_rngs={"params": False, "dropout": True},
     axis_name="batch",
 )
+

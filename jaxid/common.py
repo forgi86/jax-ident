@@ -20,8 +20,9 @@ class MLP(nn.Module):
                 x = nn.tanh(x)
         return x
     
-class FirstSecondChannels(nn.Module):
+class ChannelSlicer(nn.Module):
     channels: List[int]
 
     def __call__(self, inputs):
-        return inputs[:, self.channels]
+        return inputs[..., self.channels]
+    

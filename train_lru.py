@@ -15,14 +15,14 @@ from jaxid.lru import BatchedDLRU
 # Configuration
 cfg = {
     # Training
-    "batch_size": 32,
-    "seq_len": 1000,
+    "batch_size": 1,
+    "seq_len": 100_000,
     "skip": 100,
-    "lr": 2e-4,
-    "epochs": 2,
+    "lr": 2e-3,
+    "epochs": 1000,
     # Model
-    "n_layers": 6,
-    "d_model": 20,
+    "n_layers": 2,
+    "d_model": 10,
     "d_state": 10,
 }
 cfg = Namespace(**cfg)

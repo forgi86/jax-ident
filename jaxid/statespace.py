@@ -7,17 +7,18 @@ from typing import Sequence
 
 class StateUpdateMLP(nn.Module):
     features: Sequence[int]
+    scale: float = 1e-1
 
     def setup(self):
         # Set custom initializers
-        kernel_init = jax.nn.initializers.normal(stddev=1e-4)  # Standard deviation for the normal distribution
-        bias_init = jax.nn.initializers.constant(0)  # Constant value for all biases
+        #kernel_init = jax.nn.initializers.normal(stddev=1e-4)  # Standard deviation for the normal distribution
+        #bias_init = jax.nn.initializers.constant(0)  # Constant value for all biases
 
         # Create layers with custom initializers
-        self.net = MLP(self.features, last_layer_kwargs={"kernel_init": kernel_init, "bias_init": bias_init})
+        self.net = MLP(self.features) #, last_layer_kwargs={"kernel_init": kernel_init, "bias_init": bias_init})
 
     def __call__(self, x, u):
-        new_state = self.net(jnp.r_[x, u]) + x
+        new_state = self.scale * self.net(jnp.r_[x, u]) + 0.9*x
         return new_state  
 
     
